@@ -1,17 +1,9 @@
 #git shortcut main
-from logging import error
 import os
-import sys
-from tkinter.tix import MAX
+from git_path import GitPath
 
 MIN_OPTIONS = -3
 MAX_OPTIONS = 2
-
-class GitPath:
-    curr_dir = os.getcwd()
-    path = ""
-    txt_file = ""
-    save_path = "path.txt"
 
 def main():
     option = -999
@@ -20,13 +12,15 @@ def main():
 
     if option != 0:
         # setting up paths to directories - no matter what the option!
-        try:
-            f = open(GitPath.save_path)
-            load_path(f)
+        if not GitPath.path_loaded:
+            print("git path not loaded")
+            try:
+                f = open(GitPath.SAVE_PATH)
+                GitPath.load_path(f)
 
-            f.close()
-        except FileNotFoundError:
-            new_path()
+                f.close()
+            except FileNotFoundError:
+                GitPath.new_path()
 
         run_commands(option)
     
@@ -35,9 +29,9 @@ def main():
 def user_options():
     print("WARNING: Make sure to put this outside of your git project!")
     choice = int(input("#) Option\n" +
-                   "1) git branch > <file>\n" +
-                   "2) git diff > <file>\n" +
-                   "0) Exit\n" +
+                   "1)  git branch > <file>\n" +
+                   "2)  git diff > <file>\n" +
+                   "0)  Exit\n" +
                    "-1) Change Path\n" +
                    "-2) Open cmd in directory\n" +
                    "-3) Open git-bash in directory\n" + 
@@ -51,21 +45,11 @@ def run_commands(option):
     elif option == 2:
         cmd_to_txt("diff")
     elif option == -1:
-        new_path()
+        GitPath.new_path()
     elif option == -2:
         cmd_at_path("cmd.exe")
     elif option == -3:
         cmd_at_path("git-bash.exe")
-
-def new_path():
-    GitPath.path = input("path: ")
-
-    file = open(GitPath.save_path, "w")
-    file.write(GitPath.path)
-    file.close()
-
-def load_path(file):
-    GitPath.path = file.readline()
 
 def cmd_to_txt(command):
     # creating text file to write branches to
