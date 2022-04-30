@@ -1,9 +1,10 @@
 #git shortcut main
+from logging import error
 import os
 import sys
 from tkinter.tix import MAX
 
-MIN_OPTIONS = -1
+MIN_OPTIONS = -3
 MAX_OPTIONS = 2
 
 class GitPath:
@@ -17,21 +18,17 @@ def main():
     while (option < MIN_OPTIONS) or (option > MAX_OPTIONS):
         option = user_options()
 
-    # setting up paths to directories
-    try:
-        f = open(GitPath.save_path)
-        load_path(f)
+    if option != 0:
+        # setting up paths to directories - no matter what the option!
+        try:
+            f = open(GitPath.save_path)
+            load_path(f)
 
-        f.close()
-    except FileNotFoundError:
-        new_path()
+            f.close()
+        except FileNotFoundError:
+            new_path()
 
-    if option == 1:
-        cmd_to_txt("branch")
-    elif option == 2:
-        cmd_to_txt("diff")
-    elif option == -1:
-        new_path()
+        run_commands(option)
     
     return option
 
@@ -42,9 +39,23 @@ def user_options():
                    "2) git diff > <file>\n" +
                    "0) Exit\n" +
                    "-1) Change Path\n" +
+                   "-2) Open cmd in directory\n" +
+                   "-3) Open git-bash in directory\n" + 
                    "Choice: "))
 
     return choice
+
+def run_commands(option):
+    if option == 1:
+        cmd_to_txt("branch")
+    elif option == 2:
+        cmd_to_txt("diff")
+    elif option == -1:
+        new_path()
+    elif option == -2:
+        cmd_at_path("cmd.exe")
+    elif option == -3:
+        cmd_at_path("git-bash.exe")
 
 def new_path():
     GitPath.path = input("path: ")
@@ -66,6 +77,11 @@ def cmd_to_txt(command):
     os.system("git " + command + " > \"" + GitPath.curr_dir + "\\" + GitPath.txt_file + "\"")
     os.chdir(GitPath.curr_dir)
     os.system("notepad " + GitPath.txt_file)
+
+def cmd_at_path(app):
+    os.chdir(GitPath.path)
+    os.system("start " + app)
+    os.chdir(GitPath.curr_dir)
 
 if __name__ == '__main__':
     retVal = main()
