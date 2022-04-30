@@ -10,7 +10,6 @@ class GitPath:
     txt_file = ""
     path_loaded = False
 
-    # functions
     @classmethod
     def new_path(Self):
         # emulating do-while loop
@@ -30,6 +29,12 @@ class GitPath:
     @classmethod
     def load_path(Self, file):
         Self.path = file.readline()
+        if not os.path.isdir(Self.path):
+            print("loaded file was not a directory. Enter a new directory below.")
+            Self.new_path()
+            return
+
+        Self.path_loaded = True
 
     @classmethod
     def set_curr_dir(Self, path):

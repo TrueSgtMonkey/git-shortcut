@@ -13,7 +13,6 @@ def main():
     if option != 0:
         # setting up paths to directories - no matter what the option!
         if not GitPath.path_loaded:
-            print("git path not loaded")
             try:
                 f = open(GitPath.SAVE_PATH)
                 GitPath.load_path(f)
@@ -28,14 +27,16 @@ def main():
 
 def user_options():
     print("WARNING: Make sure to put this outside of your git project!")
-    choice = int(input("#) Option\n" +
+    choice = int(input(
+                   "#)  Option\n" +
                    "1)  git branch > <file>\n" +
                    "2)  git diff > <file>\n" +
                    "0)  Exit\n" +
                    "-1) Change Path\n" +
                    "-2) Open cmd in directory\n" +
                    "-3) Open git-bash in directory\n" + 
-                   "Choice: "))
+                   "Choice: "
+                ))
 
     return choice
 
