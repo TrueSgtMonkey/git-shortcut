@@ -6,6 +6,7 @@ MIN_OPTIONS = -3
 MAX_OPTIONS = 2
 
 def main():
+    print(GitPath.plat)
     option = -999
     while (option < MIN_OPTIONS) or (option > MAX_OPTIONS):
         option = user_options()
@@ -48,9 +49,9 @@ def run_commands(option):
     elif option == -1:
         GitPath.new_path()
     elif option == -2:
-        cmd_at_path("cmd.exe")
+        cmd_at_path("cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
     elif option == -3:
-        cmd_at_path("git-bash.exe")
+        cmd_at_path("git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
 
 def cmd_to_txt(command):
     # creating text file to write branches to
@@ -59,13 +60,17 @@ def cmd_to_txt(command):
         GitPath.txt_file += ".txt"
 
     os.chdir(GitPath.path)
-    os.system("git " + command + " > \"" + GitPath.curr_dir + "\\" + GitPath.txt_file + "\"")
+    if GitPath.plat == "Windows":
+        os.system("git " + command + " > \"" + GitPath.curr_dir + "\\" + GitPath.txt_file + "\"")
+    else:
+        os.system("git " + command + " > \"/" + GitPath.curr_dir + "/" + GitPath.txt_file + "\"")
     os.chdir(GitPath.curr_dir)
-    os.system("notepad " + GitPath.txt_file)
+    app_cmd = "notepad " if GitPath.plat == "Windows" else "open -a TextEdit "
+    os.system(app_cmd + GitPath.txt_file)
 
 def cmd_at_path(app):
     os.chdir(GitPath.path)
-    os.system("start " + app)
+    os.system("start " if GitPath.plat == "Windows" else "" + app)
     os.chdir(GitPath.curr_dir)
 
 if __name__ == '__main__':

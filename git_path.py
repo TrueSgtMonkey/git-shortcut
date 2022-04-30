@@ -1,4 +1,5 @@
 import os
+import platform
 
 class GitPath:
     # constants
@@ -9,6 +10,7 @@ class GitPath:
     path = ""
     txt_file = ""
     path_loaded = False
+    plat = platform.system()
 
     @classmethod
     def new_path(Self):

@@ -1,1 +1,1 @@
-python gs.py
+python3 gs.py
