@@ -49,9 +49,9 @@ def run_commands(option):
     elif option == -1:
         GitPath.new_path()
     elif option == -2:
-        cmd_at_path("cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
     elif option == -3:
-        cmd_at_path("git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
 
 def cmd_to_txt(command):
     # creating text file to write branches to
@@ -70,7 +70,7 @@ def cmd_to_txt(command):
 
 def cmd_at_path(app):
     os.chdir(GitPath.path)
-    os.system("start " if GitPath.plat == "Windows" else "" + app)
+    os.system(app)
     os.chdir(GitPath.curr_dir)
 
 if __name__ == '__main__':
