@@ -1,8 +1,9 @@
 #git shortcut main
 import os
+import subprocess
 from git_path import GitPath
 
-MIN_OPTIONS = -3
+MIN_OPTIONS = -4
 MAX_OPTIONS = 2
 
 def main():
@@ -36,6 +37,7 @@ def user_options():
                    "-1) Change Path\n" +
                    "-2) Open cmd in directory\n" +
                    "-3) Open git-bash in directory\n" + 
+                   "-4) Explore Git repository directory\n" +
                    "Choice: "
                 ))
 
@@ -52,6 +54,8 @@ def run_commands(option):
         cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
     elif option == -3:
         cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+    elif option == -4:
+        explore_at_path()
 
 def cmd_to_txt(command):
     # creating text file to write branches to
@@ -72,6 +76,13 @@ def cmd_at_path(app):
     os.chdir(GitPath.path)
     os.system(app)
     os.chdir(GitPath.curr_dir)
+
+def explore_at_path():
+    if GitPath.plat == "Windows":
+        path = os.path.realpath(GitPath.path)
+        os.startfile(path)
+    else: 
+        subprocess.run(["/usr/bin/open", GitPath.path])
 
 if __name__ == '__main__':
     retVal = main()
