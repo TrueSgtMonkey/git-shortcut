@@ -82,7 +82,7 @@ def explore_at_path():
         path = os.path.realpath(GitPath.path)
         os.startfile(path)
     else: 
-        subprocess.run(["/usr/bin/open", GitPath.path])
+        os.system("open %s" % GitPath.path)
 
 if __name__ == '__main__':
     retVal = main()
