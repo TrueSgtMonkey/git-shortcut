@@ -11,6 +11,8 @@ class GitPath:
     txt_file = ""
     path_loaded = False
     plat = platform.system()
+    new_branch_detected = True
+    chk_dict = {}
 
     @classmethod
     def new_path(Self):
