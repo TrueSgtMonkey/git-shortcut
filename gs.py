@@ -38,7 +38,7 @@ def user_options():
                    "2)  git diff > <file>\n" +
                    "3)  git checkout <list_of_branches>\n" +
                    "4)  git branch -D <list_of_branches>\n" +
-                   "5)  get all branches from remote\n" + 
+                   "5)  git branches from remote\n" + 
                    "0)  Exit\n" +
                    "MISC SHORTCUTS:\n" +
                    "-1) Change Path\n" +
@@ -52,92 +52,68 @@ def user_options():
 
 def run_commands(option):
     if option == 1:
-        cmd_to_txt("branch", True)
+        GitPath.cmd_to_txt("branch", True)
     elif option == 2:
-        cmd_to_txt("diff", True)
+        GitPath.cmd_to_txt("diff", True)
     elif option == 3:
         git_cmd_shortcut("checkout")
     elif option == 4:
         git_cmd_shortcut("branch -D")
     elif option == 5:
-        retrieve_all_branches_from_remote()
+        retrieve_branches_from_remote()
     elif option == -1:
         GitPath.new_path()
     elif option == -2:
-        cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        GitPath.cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
     elif option == -3:
-        cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        GitPath.cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
     elif option == -4:
         explore_at_path()
 
-def cmd_to_txt(command, new_txt_file):
-    # creating text file to write branches to if new_txt_file == True
-    if new_txt_file:
-        GitPath.txt_file = input("file: ")
-        if GitPath.txt_file.find(".") == -1:
-            GitPath.txt_file += ".txt"
-
-    # writing to a text file all of our current branches
-    os.chdir(GitPath.path)
-    if GitPath.plat == "Windows":
-        os.system("git " + command + " > \"" + GitPath.curr_dir + "\\" + GitPath.txt_file + "\"")
-    else:
-        os.system("git " + command + " > \"/" + GitPath.curr_dir + "/" + GitPath.txt_file + "\"")
-    os.chdir(GitPath.curr_dir)
-
-    # opening in notepad if we created a new text file
-    if new_txt_file:
-        app_cmd = "notepad " if GitPath.plat == "Windows" else "open -a TextEdit "
-        os.system(app_cmd + GitPath.txt_file)
-
-def cmd_at_path(app):
-    os.chdir(GitPath.path)
-    os.system(app)
-    os.chdir(GitPath.curr_dir)
-
-def get_branches(cmd, disp):
-    GitPath.txt_file = "_______branch_______.txt"
-    cmd_to_txt(cmd, False)
-    my_choice = 0
-    GitPath.chk_dict = {}
-    with open(GitPath.txt_file) as file:
-        inc = 1
-        for line in file:
-            line_strip = line.rstrip()
-            GitPath.chk_dict[inc] = line_strip
-            if disp:
-                print(str(inc) + ") " + line_strip)
-            inc += 1    
-
-    if GitPath.plat == "Windows":
-        os.system("del " + GitPath.txt_file)
-    else:
-        os.system("rm " + GitPath.txt_file)
-
 def git_cmd_shortcut(cmd):
-    get_branches("branch", True)
+    GitPath.new_branch("branch", True)
             
-    my_choice = int(input("Checkout branch (integer): "))
+    my_choice = int(input(cmd + " (integer): "))
     if my_choice < 1 or my_choice >= len(GitPath.chk_dict):
         return
     
-    cmd_at_path("git " + cmd + " " + GitPath.chk_dict[my_choice])
+    GitPath.cmd_at_path("git " + cmd + " " + GitPath.chk_dict[my_choice])
     
     if cmd == "branch -D":
         print("deleting branch...")
         GitPath.chk_dict = {}
 
-def retrieve_all_branches_from_remote():
-    get_branches("branch -r", False)
+def retrieve_branches_from_remote():
+    GitPath.new_branch("branch -r", False)
+    choice = -1
+    while choice < 0 or choice > 2:
+        choice = int(input("Choose an option:\n" +
+                   "1) Retrieve All Remote Branches\n" +
+                   "2) Retrieve A Specified # of branches\n" + 
+                   "0) Back to main menu"))
 
+    if choice == 1:
+        get_all_branches_remote()
+    elif choice == 2:
+        get_branches_remote()
+
+def get_branches_remote():
     for key in GitPath.chk_dict:
-        branch = GitPath.chk_dict[key]
-        # main branch
-        if branch.find("->") != -1:
-            continue
-        local_branch = branch[branch.find("/")+1 : len(branch)]
+        print(str(key) + ") " + GitPath.chk_dict[key])
+    line = input("Enter #s separated by spaces: ")
 
-        cmd_at_path("git checkout -b " + local_branch + " " + branch)
+    choice = ""
+    for c in line:
+        if c == " ":
+            GitPath.add_branch_to_local(int(choice))
+            choice = ""
+        elif c.isdigit():
+            choice += c
+    GitPath.add_branch_to_local(int(choice))
+
+def get_all_branches_remote():
+    for key in GitPath.chk_dict:
+        GitPath.add_branch_to_local(key)
 
 def explore_at_path():
     if GitPath.plat == "Windows":
