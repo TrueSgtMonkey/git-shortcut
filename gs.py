@@ -74,7 +74,7 @@ def git_cmd_shortcut(cmd):
     GitPath.new_branch("branch", True)
             
     my_choice = int(input(cmd + " (integer): "))
-    if my_choice < 1 or my_choice >= len(GitPath.chk_dict):
+    if my_choice < 1 or my_choice > len(GitPath.chk_dict):
         return
     
     GitPath.cmd_at_path("git " + cmd + " " + GitPath.chk_dict[my_choice])
