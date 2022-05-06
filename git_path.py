@@ -16,12 +16,13 @@ class GitPath:
 
     @classmethod
     def new_path(Self):
-        # emulating do-while loop
-        # making sure path is valid
-        while True:
-            Self.path = input("path: ")
-            if os.path.isdir(Self.path):
-                break
+        # making sure path is valid - returning if not
+        old_path = Self.path
+        Self.path = input("path: ")
+        if not os.path.isdir(Self.path):
+            print("\'" + Self.path + "\' does not exist...\n switching back to " + old_path)
+            Self.path = old_path
+            return
 
         # no matter what, this will write to a valid file
         file = open(Self.SAVE_PATH, "w")

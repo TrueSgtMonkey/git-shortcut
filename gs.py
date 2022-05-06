@@ -1,10 +1,11 @@
 #git shortcut main
 import os
 import subprocess
+from threading import local
 from git_path import GitPath
 
 MIN_OPTIONS = -4
-MAX_OPTIONS = 4
+MAX_OPTIONS = 5
 
 def main():
     # keeping this because it is useful to know which OS version is running
@@ -32,11 +33,14 @@ def user_options():
     print("WARNING: Make sure to put this outside of your git project!")
     choice = int(input(
                    "#)  Option\n" +
+                   "GIT SHORTCUTS:\n" +
                    "1)  git branch > <file>\n" +
                    "2)  git diff > <file>\n" +
                    "3)  git checkout <list_of_branches>\n" +
                    "4)  git branch -D <list_of_branches>\n" +
+                   "5)  get all branches from remote\n" + 
                    "0)  Exit\n" +
+                   "MISC SHORTCUTS:\n" +
                    "-1) Change Path\n" +
                    "-2) Open cmd in directory\n" +
                    "-3) Open git-bash in directory\n" + 
@@ -55,6 +59,8 @@ def run_commands(option):
         git_cmd_shortcut("checkout")
     elif option == 4:
         git_cmd_shortcut("branch -D")
+    elif option == 5:
+        retrieve_all_branches_from_remote()
     elif option == -1:
         GitPath.new_path()
     elif option == -2:
@@ -89,18 +95,27 @@ def cmd_at_path(app):
     os.system(app)
     os.chdir(GitPath.curr_dir)
 
-def git_cmd_shortcut(cmd):
+def get_branches(cmd, disp):
     GitPath.txt_file = "_______branch_______.txt"
-    cmd_to_txt("branch", False)
+    cmd_to_txt(cmd, False)
     my_choice = 0
-    if len(GitPath.chk_dict) == 0:
-        with open(GitPath.txt_file) as file:
-            inc = 1
-            for line in file:
-                line_strip = line.rstrip()
-                GitPath.chk_dict[inc] = line_strip
+    GitPath.chk_dict = {}
+    with open(GitPath.txt_file) as file:
+        inc = 1
+        for line in file:
+            line_strip = line.rstrip()
+            GitPath.chk_dict[inc] = line_strip
+            if disp:
                 print(str(inc) + ") " + line_strip)
-                inc += 1
+            inc += 1    
+
+    if GitPath.plat == "Windows":
+        os.system("del " + GitPath.txt_file)
+    else:
+        os.system("rm " + GitPath.txt_file)
+
+def git_cmd_shortcut(cmd):
+    get_branches("branch", True)
             
     my_choice = int(input("Checkout branch (integer): "))
     if my_choice < 1 or my_choice >= len(GitPath.chk_dict):
@@ -111,12 +126,19 @@ def git_cmd_shortcut(cmd):
     if cmd == "branch -D":
         print("deleting branch...")
         GitPath.chk_dict = {}
-    
-    if GitPath.plat == "Windows":
-        os.system("del " + GitPath.txt_file)
-    else:
-        os.system("rm " + GitPath.txt_file)
-    
+
+def retrieve_all_branches_from_remote():
+    get_branches("branch -r", False)
+
+    for key in GitPath.chk_dict:
+        branch = GitPath.chk_dict[key]
+        # main branch
+        if branch.find("->") != -1:
+            continue
+        local_branch = branch[branch.find("/")+1 : len(branch)]
+
+        cmd_at_path("git checkout -b " + local_branch + " " + branch)
+
 def explore_at_path():
     if GitPath.plat == "Windows":
         path = os.path.realpath(GitPath.path)
