@@ -5,7 +5,7 @@ from threading import local
 from git_path import GitPath
 
 MIN_OPTIONS = -4
-MAX_OPTIONS = 5
+MAX_OPTIONS = 6
 
 def main():
     # keeping this because it is useful to know which OS version is running
@@ -39,6 +39,7 @@ def user_options():
                    "3)  git checkout <list_of_branches>\n" +
                    "4)  git branch -D <list_of_branches>\n" +
                    "5)  git branches from remote\n" + 
+                   "6)  amend PR code review\n" +
                    "0)  Exit\n" +
                    "MISC SHORTCUTS:\n" +
                    "-1) Change Path\n" +
@@ -51,24 +52,27 @@ def user_options():
     return choice
 
 def run_commands(option):
-    if option == 1:
-        GitPath.cmd_to_txt("branch", True)
-    elif option == 2:
-        GitPath.cmd_to_txt("diff", True)
-    elif option == 3:
-        git_cmd_shortcut("checkout")
-    elif option == 4:
-        git_cmd_shortcut("branch -D")
-    elif option == 5:
-        retrieve_branches_from_remote()
-    elif option == -1:
-        GitPath.new_path()
-    elif option == -2:
-        GitPath.cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
-    elif option == -3:
-        GitPath.cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
-    elif option == -4:
-        explore_at_path()
+    match option:
+        case 1:
+            GitPath.cmd_to_txt("branch", True)
+        case 2:
+            GitPath.cmd_to_txt("diff", True)
+        case 3:
+            git_cmd_shortcut("checkout")
+        case 4:
+            git_cmd_shortcut("branch -D")
+        case 5:
+            retrieve_branches_from_remote()
+        case 6:
+            git_add_amend_push()
+        case -1:
+            GitPath.new_path()
+        case -2:
+            GitPath.cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        case -3:
+            GitPath.cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        case -4:
+            explore_at_path()
 
 def git_cmd_shortcut(cmd):
     GitPath.new_branch("branch", True)
@@ -114,6 +118,13 @@ def get_branches_remote():
 def get_all_branches_remote():
     for key in GitPath.chk_dict:
         GitPath.add_branch_to_local(key)
+
+def git_add_amend_push():
+    GitPath.cmd_at_path("git add -A")
+    GitPath.cmd_at_path("git commit --amend")
+    local_branch = input("local branch: ")
+    remote_branch = input("remote branch: ")
+    GitPath.cmd_at_path("git push origin " + local_branch + ":" + remote_branch + " -f")
 
 def explore_at_path():
     if GitPath.plat == "Windows":
