@@ -1,11 +1,9 @@
 #git shortcut main
 import os
-import subprocess
-from threading import local
 from git_path import GitPath
 
 MIN_OPTIONS = -4
-MAX_OPTIONS = 6
+MAX_OPTIONS = 5
 
 def main():
     # keeping this because it is useful to know which OS version is running
@@ -39,7 +37,6 @@ def user_options():
                    "3)  git checkout <list_of_branches>\n" +
                    "4)  git branch -D <list_of_branches>\n" +
                    "5)  git branches from remote\n" + 
-                   "6)  amend PR code review\n" +
                    "0)  Exit\n" +
                    "MISC SHORTCUTS:\n" +
                    "-1) Change Path\n" +
@@ -63,8 +60,6 @@ def run_commands(option):
             git_cmd_shortcut("branch -D")
         case 5:
             retrieve_branches_from_remote()
-        case 6:
-            git_add_amend_push()
         case -1:
             GitPath.new_path()
         case -2:
@@ -118,13 +113,6 @@ def get_branches_remote():
 def get_all_branches_remote():
     for key in GitPath.chk_dict:
         GitPath.add_branch_to_local(key)
-
-def git_add_amend_push():
-    GitPath.cmd_at_path("git add -A")
-    GitPath.cmd_at_path("git commit --amend")
-    local_branch = input("local branch: ")
-    remote_branch = input("remote branch: ")
-    GitPath.cmd_at_path("git push origin " + local_branch + ":" + remote_branch + " -f")
 
 def explore_at_path():
     if GitPath.plat == "Windows":
