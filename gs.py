@@ -1,49 +1,44 @@
 #git shortcut main
 import os
 from git_path import GitPath
+from style import Color
 
-MIN_OPTIONS = -4
+MIN_OPTIONS = -6
 MAX_OPTIONS = 5
 
 def main():
     # keeping this because it is useful to know which OS version is running
-    print("Version: " + GitPath.plat)
-    option = -999
+    print(Color.string(Color.BOLD + Color.GREEN + Color.UNDERLINE, "Version: " + GitPath.plat))
+
+    # setting to very low value to make sure it runs at least once
+    option = -999999
     while (option < MIN_OPTIONS) or (option > MAX_OPTIONS):
         option = user_options()
 
     if option != 0:
-        # setting up paths to directories - no matter what the option!
-        if not GitPath.path_loaded:
-            try:
-                f = open(GitPath.SAVE_PATH)
-                GitPath.load_path(f)
-
-                f.close()
-            except FileNotFoundError:
-                GitPath.new_path()
-
         run_commands(option)
     
     return option
 
 def user_options():
-    print("WARNING: Make sure to put this outside of your git project!")
+    print(Color.string(Color.BOLD + Color.RED, "WARNING: Make sure to put this outside of your git project!"))
     choice = int(input(
-                   "#)  Option\n" +
-                   "GIT SHORTCUTS:\n" +
+                   Color.string(Color.BOLD + Color.GREEN, "#)  Option\n") +
+                   Color.string(Color.BOLD + Color.GREEN, "GIT SHORTCUTS:\n") + 
                    "1)  git branch > <file>\n" +
                    "2)  git diff > <file>\n" +
                    "3)  git checkout <list_of_branches>\n" +
                    "4)  git branch -D <list_of_branches>\n" +
                    "5)  git branches from remote\n" + 
                    "0)  Exit\n" +
-                   "MISC SHORTCUTS:\n" +
-                   "-1) Change Path\n" +
-                   "-2) Open cmd in directory\n" +
-                   "-3) Open git-bash in directory\n" + 
-                   "-4) Explore Git repo\n" +
-                   "Choice: "
+                   Color.string(Color.BOLD + Color.GREEN, "MISC SHORTCUTS:\n") +
+                   "-1) Add Path\n" +
+                   "-2) Change Path\n" +
+                   "-3) Remove Path\n" + 
+                   "-4) Open cmd in <" + Color.string(Color.DARKCYAN, GitPath.path) + ">\n" +
+                   "-5) Open git-bash in <" + Color.string(Color.DARKCYAN, GitPath.path) + ">\n" +
+                   "-6) Explore Git repo\n" +
+                   Color.string(Color.GREEN, "Choice: ")
                 ))
 
     return choice
@@ -63,10 +58,14 @@ def run_commands(option):
         case -1:
             GitPath.new_path()
         case -2:
-            GitPath.cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+            GitPath.pick_path(GitPath.SAVE_PATH)
         case -3:
-            GitPath.cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+            GitPath.remove_path(GitPath.SAVE_PATH)
         case -4:
+            GitPath.cmd_at_path("start cmd.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        case -5:
+            GitPath.cmd_at_path("start git-bash.exe" if GitPath.plat == "Windows" else "open -a Terminal .")
+        case -6:
             explore_at_path()
 
 def git_cmd_shortcut(cmd):
@@ -122,6 +121,8 @@ def explore_at_path():
         os.system("open %s" % GitPath.path)
 
 if __name__ == '__main__':
+    while GitPath.pick_path(GitPath.SAVE_PATH) == False:
+        print(Color.string(Color.RED, "Something went wrong with picking/creating a path...\nTry again."))
     retVal = main()
     while retVal != 0:
         retVal = main()
