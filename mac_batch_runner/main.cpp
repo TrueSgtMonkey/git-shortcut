@@ -1,46 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-
-class vecchar
-{
-  private:
-    char* arr;
-    int size;
-    int capacity;
-  public:
-    vecchar()
-    {
-      size = 0;
-      capacity = 1;
-      arr = new char[capacity];
-    }
-    ~vecchar()
-    {
-      delete[] arr;
-    }
-    void push_char(char c)
-    {
-      this->arr[size] = c;
-      size++;
-      if(size >= capacity)
-      {
-        capacity *= 2;
-        char* arr = new char[capacity];
-        for(int i = 0; i < size; i++)
-        {
-          arr[i] = this->arr[i];
-        }
-        delete[] this->arr;
-        this->arr = arr;
-      }
-    }
-    char* getArr()
-    {
-      return this->arr;
-    }
-
-};
+#include "vecchar.h"
 
 int main(int argc, const char* argv[])
 {
@@ -56,17 +17,24 @@ int main(int argc, const char* argv[])
       break;
   }
 
-  vecchar vec;
+  Vecchar<Vecchar<char>*> vec(new Vecchar<char>);
 
   char c;
   while(ifs.get(c))
   {
-    vec.push_char(c);
+    vec[vec.get_size()-1]->push(c);
+    if(c == '\n')
+    {
+      vec.push(new Vecchar<char>);
+    } 
   }
 
-  //cout << vec.getArr() << endl;
-  system(vec.getArr());
+  for(int i = 0; i < vec.get_size(); i++)
+  {
+    system(vec[i]->get_array());
+  }
 
   ifs.close();
+  
   return 0;
 }
