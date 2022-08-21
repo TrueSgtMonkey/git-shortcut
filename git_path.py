@@ -1,20 +1,35 @@
+# Contains GitPath class - performs most of path related stuff needed for Git
+
 from importlib.resources import path
 from style import Color
 import os
 import platform
+
+CURRENT_BRANCH_TXT = "___tmp___.txt"
 
 class GitPath:
     # constants
     SAVE_PATH = "path.txt"
 
     # variables
-    curr_dir = os.getcwd()
+    curr_dir = ""
+    curr_branch = ""
     paths = []
     path = ""                   #current paths
     txt_file = ""
-    plat = platform.system()
-    new_branch_detected = True
+    plat = ""
+    new_branch_detected = False
     chk_dict = {}
+
+    @classmethod
+    def __init__(Self):
+        Self.curr_dir = os.getcwd()
+        Self.plat = platform.system()
+        Self.new_branch_detected = True
+        if Self.plat == "Windows":
+            os.system("cls")
+        else:
+            os.system("clear")
 
     @classmethod
     def new_path(Self):
@@ -85,11 +100,35 @@ class GitPath:
         file.close()
         return True
 
+    ## Calling w/ False returns curr Branch unless curr branch not loaded yet
+    ## Calling w/ True forces branch to grab curr branch from text file
+    @classmethod
+    def get_current_branch(Self, force_update):
+        str_to_ret = ""
+
+        # iterates through a text file so only want to run this once in a while
+        if force_update or Self.curr_branch == "":
+            old_text = Self.txt_file
+            Self.txt_file = CURRENT_BRANCH_TXT
+            Self.cmd_to_txt("branch", False)
+
+            file = open(Self.txt_file, "r")
+            for line in file.readlines():
+                line = line.strip()
+                if line.startswith("*"):
+                    str_to_ret = line[(line.find("*") + 2):len(line)]
+
+            Self.txt_file = old_text
+            Self.curr_branch = str_to_ret
+
+        str_to_ret = Self.curr_branch
+        return str_to_ret
+
     @classmethod
     def print_curr_paths(Self):
         count = 0
         for path in Self.paths:
-            print(str(count) + ": " + path)
+            print(str(count) + ": " + Color.string(Color.DARKCYAN + Color.BOLD, path))
             count += 1
         return count
 
@@ -99,7 +138,6 @@ class GitPath:
         will_del = Self.pick_path(path)
         if not will_del:
             return
-
         Self.paths.remove(Self.path)
 
         # overwriting the file to erase the path from the file
@@ -113,6 +151,14 @@ class GitPath:
         print("Pick a new repo to switch to below (if one exists)...")
         # picking a new path or creating one if we deleted all
         Self.pick_path(path)
+
+    @classmethod
+    def explore_at_path(Self):
+        if Self.plat == "Windows":
+            path = os.path.realpath(Self.path)
+            os.startfile(path)
+        else: 
+            os.system("open %s" % Self.path)
 
     @classmethod
     def set_curr_dir(Self, path):
