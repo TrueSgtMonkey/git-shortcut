@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/codythompson/Documents/GitHub/git-shortcut/mac_batch_runner/main.cpp
+iostream
+-
+fstream
+-
+stdlib.h
+-
+vecchar.h
+/Users/codythompson/Documents/GitHub/git-shortcut/mac_batch_runner/vecchar.h
+
+/Users/codythompson/Documents/GitHub/git-shortcut/mac_batch_runner/vecchar.h
+
