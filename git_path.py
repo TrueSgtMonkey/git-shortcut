@@ -1,9 +1,11 @@
 # Contains GitPath class - performs most of path related stuff needed for Git
 
+from array import array
 from importlib.resources import path
 from style import Color
 import os
 import platform
+from git_save import GitSaveVars
 
 CURRENT_BRANCH_TXT = "___tmp___.txt"
 
@@ -14,6 +16,7 @@ class GitPath:
     # variables
     curr_dir = ""
     curr_branch = ""
+    all_branches = []
     paths = []
     path = ""                   #current paths
     txt_file = ""
@@ -103,26 +106,41 @@ class GitPath:
     ## Calling w/ False returns curr Branch unless curr branch not loaded yet
     ## Calling w/ True forces branch to grab curr branch from text file
     @classmethod
-    def get_current_branch(Self, force_update):
+    def get_current_branch(Self, force_update) -> str:
         str_to_ret = ""
 
         # iterates through a text file so only want to run this once in a while
         if force_update or Self.curr_branch == "":
-            old_text = Self.txt_file
-            Self.txt_file = CURRENT_BRANCH_TXT
-            Self.cmd_to_txt("branch", False)
-
-            file = open(Self.txt_file, "r")
-            for line in file.readlines():
-                line = line.strip()
+            branches = Self.get_all_branches(force_update)
+            for line in branches:
                 if line.startswith("*"):
                     str_to_ret = line[(line.find("*") + 2):len(line)]
-
-            Self.txt_file = old_text
+            
             Self.curr_branch = str_to_ret
 
         str_to_ret = Self.curr_branch
         return str_to_ret
+
+    @classmethod
+    def get_all_branches(Self, force_update) -> array:
+        if force_update or len(Self.all_branches) == 0:
+            old_text = Self.txt_file
+            Self.all_branches = []
+
+            Self.txt_file = CURRENT_BRANCH_TXT
+            Self.cmd_to_txt("branch", False)
+
+            file = open(Self.txt_file, "r")
+
+            for line in file.readlines():
+                line = line.strip()
+                Self.all_branches.append(line)
+
+            Self.txt_file = old_text
+            file.close()
+        
+
+        return Self.all_branches
 
     @classmethod
     def print_curr_paths(Self):
@@ -217,6 +235,7 @@ class GitPath:
                 if disp:
                     print(str(inc) + ") " + line_strip)
                 inc += 1    
+            file.close()
 
         if Self.plat == "Windows":
             os.system("del " + Self.txt_file)
