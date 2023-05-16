@@ -247,6 +247,27 @@ def git_add_amend_push():
 
 def git_set_upstream_origin_branch():
     print(Color.YELLOW)
+    git_path.cmd_at_path("git add -A")
+    print(Color.END)
+    print("\nHow do you want to commit?")
+    option = int(input(
+        "Select an option below:\n" +
+        "  1) git commit\n" +
+        "  2) git commit --amend\n" +
+        "  0) Abort\n" +
+        Color.string(Color.BLUE, "Choice: ")
+    ))
+
+    match option:
+        case 0:
+            return
+        case 1:
+            git_path.cmd_at_path("git commit")
+        case 2:
+            git_path.cmd_at_path("git commit --amend")
+        case _:
+            return
+
     git_path.cmd_at_path("git push --set-upstream origin " + git_path.get_current_branch(False))
     print(Color.END)
 
