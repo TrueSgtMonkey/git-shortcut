@@ -10,7 +10,7 @@ import os
 TEMP_STATUS_TXT_NAME = "temp_status.txt"
 TEMP_COMMIT_TXT_NAME = "___commit___.txt"
 MIN_OPTIONS = -8
-MAX_OPTIONS = 10
+MAX_OPTIONS = 11
 
 def main(git_path):
     # keeping this because it is useful to know which OS version is running
@@ -44,7 +44,8 @@ def user_options(git_path):
         "7)  amend PR code review\n" +
         "8)  git push --set-upstream origin " + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
         "9)  git restore <list_of_files>\n" +
-        "10) get all files altered in commit <commit-id>\n" +
+        "10) git clean\n" +
+        "11) get all files altered in commit <commit-id>\n" +
         "0)  Exit\n" +
         Color.string(Color.BOLD + Color.GREEN, "MISC SHORTCUTS:\n") +
         "-1) Add Path\n" +
@@ -89,6 +90,8 @@ def run_commands(git_path, option):
         case 9:
             git_restore_files()
         case 10:
+            git_clean()
+        case 11:
             get_all_files_from_commit()
         case -1:
             git_path.new_path()
@@ -127,7 +130,10 @@ def choose_branch(message) -> int:
 
 def git_status_rebase():
     # checking if there are local changes that need to be dealt with
-    git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\status.log\"")
+    if git_path.plat == "Windows":
+        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\status.log\"")
+    else:
+        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "/status.log\"")
     status_file = open("status.log", "r")
     cannot_rebase = True
     for line in status_file.readlines():
@@ -246,30 +252,41 @@ def git_add_amend_push():
     print(Color.END)
 
 def git_set_upstream_origin_branch():
-    print(Color.YELLOW)
-    git_path.cmd_at_path("git add -A")
-    print(Color.END)
-    print("\nHow do you want to commit?")
-    option = int(input(
-        "Select an option below:\n" +
-        "  1) git commit\n" +
-        "  2) git commit --amend\n" +
-        "  0) Abort\n" +
-        Color.string(Color.BLUE, "Choice: ")
+    choice = int(input(
+        Color.string(Color.YELLOW, "1) git commit\n") +
+        Color.string(Color.YELLOW, "2) git commit --amend\n") +
+        "0) Exit Mode\n" +
+        "Choice: "
     ))
 
-    match option:
-        case 0:
-            return
+    if choice == 0:
+        return
+
+    print(Color.YELLOW)
+    git_path.cmd_at_path("git add -A")
+    match choice:
         case 1:
             git_path.cmd_at_path("git commit")
         case 2:
             git_path.cmd_at_path("git commit --amend")
-        case _:
-            return
 
     git_path.cmd_at_path("git push --set-upstream origin " + git_path.get_current_branch(False))
     print(Color.END)
+
+def git_clean():
+    # git clean
+    choice = int(input(
+        Color.string(Color.YELLOW, "1) clean -f -x") + " #(files)\n" +
+        Color.string(Color.YELLOW, "2) clean -f -d -x") + " #(directories)\n" +
+        "0) Exit Clean Mode\n" +
+        "Choice: "
+    ))
+
+    match choice:
+        case 1:
+            git_path.cmd_at_path("git clean -f -x")
+        case 2:
+            git_path.cmd_at_path("git clean -f -d -x")
 
 def get_all_files_from_commit():
     commit_id = input(Color.string(Color.CYAN, "Commit ID: "))
