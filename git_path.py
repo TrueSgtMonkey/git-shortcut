@@ -90,7 +90,11 @@ class GitPath:
         # picking the path that we want to load from file
         while count >= len(Self.paths):
             print("Choose a number < 0 to not choose a path.")
-            count = int(input("Which path (#): "))
+            countString = input("Which path (#): ")
+            while not countString.isnumeric() or int(countString) < 0:
+                Color.print(Color.RED, "Please input an integer (..., -3, -2, -1, 0, 1, 2, 3, ...)")
+                countString = input("Which path (#): ")
+            count = int(countString)
             if count >= len(Self.paths):
                 Self.print_curr_paths()
             elif count < 0:
