@@ -271,6 +271,7 @@ def git_set_upstream_origin_branch():
     print(Color.END)
 
 def git_clean():
+    # git clean
     choice = int(input(
         Color.string(Color.YELLOW, "1) clean -f -x") + " #(files)\n" +
         Color.string(Color.YELLOW, "2) clean -f -d -x") + " #(directories)\n" +
