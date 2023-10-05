@@ -39,7 +39,7 @@ def user_options(git_path):
         "2)  git rebase with " + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + "\n" +
         "3)  git checkout <list_of_branches>\n" +
         "4)  git branch -D <list_of_branches>\n" +
-        "5)  git branches from remote\n" + 
+        "5)  MIKKEL MERGE\n" + 
         "6)  git checkout -b <branch_name>\n" +
         "7)  amend PR code review\n" +
         "8)  git push --set-upstream origin " + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
@@ -79,7 +79,7 @@ def run_commands(git_path, option):
             git_delete_shortcut()
             git_path.get_current_branch(True)
         case 5:
-            retrieve_branches_from_remote()
+            git_mikkel_merge()
         case 6:
             git_create_branch("Checkout ")
             git_path.get_current_branch(True)
@@ -297,6 +297,27 @@ def get_all_files_from_commit():
         full_filename = git_path.path + "\\" + filename
         full_filename = full_filename.replace("/", "\\")
         os.system("copy \"" + full_filename + "\" " + folder_name)
+
+def git_mikkel_merge():
+    # Grabbing current path and updating to ensure we are on the correct one
+    current_path = git_path.get_current_branch(True)
+    if current_path == "main":
+        Color.print(Color.RED + Color.UNDERLINE, "checkout to your branch that you want to merge with main!")
+
+    # Checking with user if they want to do this since this will merge PR
+    choice = int(input(
+        Color.string(Color.BLUE, "You are about to merge " + current_path + " in with main.\nContinue?") +
+        Color.string(Color.YELLOW, "1) Yes\n") +
+        Color.string(Color.YELLOW, "2) No\n")  +
+        "Choice: "
+    ))
+    if choice != 1:
+        return
+
+    # Performing the merge
+    git_path.cmd_at_path("git checkout main")
+    git_path.cmd_at_path("git merge origin/" + current_path)
+    git_path.cmd_at_path("git push")
 
 def git_create_branch(message):
     backup_pr = input(message + "Branch: ")
