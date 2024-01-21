@@ -228,7 +228,7 @@ def git_add_amend_push():
         return
     
     print(Color.YELLOW)
-    git_path.cmd_at_path("git add -A")
+    git_path.cmd_at_path("git add .")
     git_path.cmd_at_path("git commit --amend")
     print(Color.END)
 
@@ -260,7 +260,7 @@ def git_set_upstream_origin_branch():
         return
 
     print(Color.YELLOW)
-    git_path.cmd_at_path("git add -A")
+    git_path.cmd_at_path("git add .")
     match choice:
         case 1:
             git_path.cmd_at_path("git commit")
