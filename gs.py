@@ -1,15 +1,19 @@
 #git shortcut main
 # contains main function as well as specific Git functions
+from io import TextIOWrapper
 from random import randint, random
 from threading import local
 from style import Color
 from git_path import GitPath
 from git_save import GitSaveVars
-import os
+import json as json
+import os as os
 
-TEMP_STATUS_TXT_NAME = "temp_status.txt"
-TEMP_COMMIT_TXT_NAME = "___commit___.txt"
-MIN_OPTIONS = -8
+TEMP_STATUS_TXT_NAME      = "temp_status.txt"
+TEMP_COMMIT_TXT_NAME      = "___commit___.txt"
+REBASE_BRANCHES_TXT_NAME  = "rebase_branches.json"
+REBASE_BRANCHES_KEY_NAME  = "rebase_branches"
+MIN_OPTIONS = -9
 MAX_OPTIONS = 11
 
 def main(git_path):
@@ -35,27 +39,28 @@ def user_options(git_path):
     print(
         Color.string(Color.BOLD + Color.GREEN, "#)  Option\n") +
         Color.string(Color.BOLD + Color.GREEN, "GIT SHORTCUTS:\n") + 
-        "1)  git branch > <file>\n" +
-        "2)  git rebase with " + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + "\n" +
-        "3)  git checkout <list_of_branches>\n" +
-        "4)  git branch -D <list_of_branches>\n" +
-        "5)  MIKKEL MERGE\n" + 
-        "6)  git checkout -b <branch_name>\n" +
-        "7)  amend PR code review\n" +
-        "8)  git push --set-upstream origin " + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
-        "9)  git restore <list_of_files>\n" +
-        "10) git clean\n" +
-        "11) get all files altered in commit <commit-id>\n" +
-        "0)  Exit\n" +
+        "1)   git branch > <file>\n" +
+        "2)   git rebase with " + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + "\n" +
+        "3)   git checkout <list_of_branches>\n" +
+        "4)   git branch -D <list_of_branches>\n" +
+        "5)   MIKKEL MERGE\n" + 
+        "6)   git checkout -b <branch_name>\n" +
+        "7)   amend PR code review\n" +
+        "8)   git push --set-upstream origin " + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
+        "9)   git restore <list_of_files>\n" +
+        "10)  git clean\n" +
+        "11)  get all files altered in commit <commit-id>\n" +
+        "0)   Exit\n" +
         Color.string(Color.BOLD + Color.GREEN, "MISC SHORTCUTS:\n") +
-        "-1) Add Path\n" +
-        "-2) Change Path\n" +
-        "-3) Remove Path\n" + 
-        "-4) Open cmd in <" + Color.string(Color.DARKCYAN, git_path.path) + ">\n" +
-        "-5) Open git-bash in <" + Color.string(Color.DARKCYAN, git_path.path) + ">\n" +
-        "-6) Explore Git repo\n" +
-        "-7) Refresh\n" +
-        "-8) Set branch to rebase with (current=" + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + ")\n" +
+        "-1)  Add Path\n" +
+        "-2)  Change Path\n" +
+        "-3)  Remove Path\n" + 
+        "-4)  Open cmd in <" + Color.string(Color.DARKCYAN, git_path.path) + ">\n" +
+        "-5)  Open git-bash in <" + Color.string(Color.DARKCYAN, git_path.path) + ">\n" +
+        "-6)  Explore Git repo\n" +
+        "-7)  Refresh\n" +
+        "-8)  Set branch to rebase with (current=" + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + ")\n" +
+        "-9)  Useful Functions/Commands\n" +
         Color.string(Color.DARKCYAN, "Current Branch: ") + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
         Color.string(Color.GREEN, "Choice: "),
         end=""
@@ -113,6 +118,8 @@ def run_commands(git_path, option):
             return
         case -8:
             set_rebase_branch()
+        case -9:
+            useful_functions_and_commands()
 
 def choose_branch(message) -> int:
     count = 1
@@ -405,8 +412,135 @@ def choose_file_to_restore(staged_files, unstaged_files):
             unstaged_files.pop(choice-1)
 
 def set_rebase_branch():
+    jsonDict = {}
+    file : TextIOWrapper = None
+
+    if not os.path.exists(REBASE_BRANCHES_TXT_NAME):
+        jsonDict = get_json_dict()
+    else:
+        try:
+            file = open(REBASE_BRANCHES_TXT_NAME, "r")
+            jsonDict = json.load(file)
+        except Exception:
+            jsonDict = get_json_dict()
+
+    rebase_branches = []
+    message = ""
+    curr_idx = 1
+    choice = 1
+    for branch in jsonDict[REBASE_BRANCHES_KEY_NAME]:
+        rebase_branches.append(branch)
+        if curr_idx % 2 == 0:
+            message += Color.string(Color.GREEN, str(curr_idx) + ")  " + branch + "\n")
+        else:
+            message += Color.string(Color.RED, str(curr_idx) + ")  " + branch + "\n")
+        curr_idx += 1
+    
+    while choice != 0:
+        choice = int(input(
+            message +
+            "0)  Exit Mode\n" +
+            "-1) Add Path\n" +
+            "-2) Remove Path\n" +
+            "Choice: "
+        ))
+
+        match choice:
+            case 0:
+                return
+            case -1:
+                message, curr_idx = add_rebase_branch(rebase_branches, jsonDict, message, curr_idx)
+            case -2:
+                message, curr_idx = remove_rebase_branch(rebase_branches, jsonDict, message, curr_idx)
+            case _:
+                branch = rebase_branches[choice-1]
+                GitSaveVars.set_rebase_branch(branch)
+                return
+
+def get_json_dict() -> dict:
+    file = open(REBASE_BRANCHES_TXT_NAME, "w")
+    jsonDict = {
+        REBASE_BRANCHES_KEY_NAME : {
+
+        }
+    }
+    json.dump(jsonDict, file)
+    file.close()
+
+    return jsonDict
+
+def add_rebase_branch(rebase_branches : list, jsonDict : dict, message : str, curr_idx : int):
+    file = open(REBASE_BRANCHES_TXT_NAME, "w")
     branch = input("Branch: ")
     GitSaveVars.set_rebase_branch(branch)
+    rebase_branches.append(branch)
+    jsonDict[REBASE_BRANCHES_KEY_NAME][branch] = True
+    message += str(curr_idx) + ")  " + branch + "\n"
+    curr_idx += 1
+    json.dump(jsonDict, file)
+    file.close()
+
+    return message, curr_idx
+
+def remove_rebase_branch(rebase_branches : list, jsonDict : dict, message : str, curr_idx : int):
+    del_choice = int(input(
+        message +
+        "0) Do not delete\n" +
+        "Choice: "
+    ))
+    del_choice_idx = del_choice-1
+
+    # we chose to exit instead of deleting
+    if del_choice <= 0 or del_choice_idx >= len(rebase_branches):
+        return message, curr_idx
+    
+    file = open(REBASE_BRANCHES_TXT_NAME, "w")
+
+    # removing element from list and jsonDict
+    jsonDict[REBASE_BRANCHES_KEY_NAME].pop(rebase_branches[del_choice_idx])
+    rebase_branches.pop(del_choice_idx)
+
+    # changing string for the next print
+    curr_idx = 1
+    message = ""
+    for branch in rebase_branches:
+        message += str(curr_idx) + ")  " + branch + "\n"
+        curr_idx += 1
+
+    # output all of the results to the file
+    json.dump(jsonDict, file)
+
+    file.close()
+
+    return message, curr_idx
+def useful_functions_and_commands():
+    choice = 1
+    while choice != 0:
+        choice = int(input(
+            "1) Replace String with another String\n" +
+            "0) Exit Mode\n" +
+            "Choice: "
+        ))
+
+        useful_func_command_pick(choice)
+
+def useful_func_command_pick(choice : int):
+    match choice:
+        case 1:
+            replace_string_with_string()
+        case 2:
+            generate_github_from_gerrit_code()
+        case 3:
+            turn_off_trainings_stub_mrc()
+
+def replace_string_with_string():
+    old_char = input("Old String: ")
+    new_char = input("New String: ")
+
+    full_string = input("String: ")
+    full_string = full_string.replace(old_char, new_char)
+    print(full_string)
+
 
 if __name__ == '__main__':
     GitSaveVars.initialize()
