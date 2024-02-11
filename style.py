@@ -12,7 +12,7 @@ class Color:
 
     ## adds the style passed in to the message passed in and performs reset
     @classmethod
-    def string(Self, style, message):
+    def string(Self, style, message) -> str:
         return style + message + Self.END
 
     ## shortcut method to call print with the string() function
