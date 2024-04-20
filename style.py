@@ -19,3 +19,11 @@ class Color:
     @classmethod
     def print(Self, style, message):
         print(Self.string(style, message))
+
+    @classmethod
+    def update_color_print(Self, count: int, color: str, color_alt: str) -> str:
+        if count % 2 == 0:
+            return color
+        else:
+            return color_alt
+

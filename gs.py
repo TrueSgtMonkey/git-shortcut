@@ -1,29 +1,35 @@
 #git shortcut main
 # contains main function as well as specific Git functions
-from io import TextIOWrapper
-from random import randint, random
-from threading import local
-from style import Color
-from git_path import GitPath
-from git_save import GitSaveVars
+
+import sys as sys
 import json as json
 import os as os
 
-TEMP_STATUS_TXT_NAME      = "temp_status.txt"
-TEMP_COMMIT_TXT_NAME      = "___commit___.txt"
-REBASE_BRANCHES_TXT_NAME  = "rebase_branches.json"
-REBASE_BRANCHES_KEY_NAME  = "rebase_branches"
+sys.path[:0] = ["options", "misc_options"]
+from options.git_status_rebase         import GitStatusRebase
+from options.git_branch_shortcut       import GitBranchShortcut
+from options.git_remote_shortcut       import GitRemoteShortCut
+from options.git_restore_clean         import GitRestoreClean
+from options.get_all_files_from_commit import GetAllFilesFromCommit
+
+from misc_options.git_repo_shortcuts            import GitRepoShortcuts
+from misc_options.useful_functions_and_commands import UsefulFunctions
+
+from style import Color
+from git_path import GitPath
+from git_save import GitSaveVars
+
 MIN_OPTIONS = -9
 MAX_OPTIONS = 11
 
-def main(git_path):
+def main(git_path) -> dict:
     # keeping this because it is useful to know which OS version is running
     print(Color.string(Color.BOLD + Color.GREEN + Color.UNDERLINE, "Version: " + git_path.plat))
 
     # setting to very low value to make sure it runs at least once
     option = -999999
     while (option < MIN_OPTIONS) or (option > MAX_OPTIONS):
-        option = user_options(git_path)
+        option = print_user_options(git_path)
 
     if option != 0:
         run_commands(git_path, option)
@@ -33,7 +39,7 @@ def main(git_path):
         "option" : option
     }
 
-def user_options(git_path):
+def print_user_options(git_path):
     print(Color.string(Color.BOLD + Color.RED, "WARNING: Make sure to put this outside of your git project!"))
     user_input = ""
     print(
@@ -76,28 +82,28 @@ def run_commands(git_path, option):
         case 1:
             git_path.cmd_to_txt("branch", True)
         case 2:
-            git_status_rebase()
+            GitStatusRebase.git_status_rebase(git_path, GitSaveVars)
         case 3:
-            git_checkout_shortcut()
+            GitBranchShortcut.git_checkout_shortcut(git_path)
             git_path.get_current_branch(True)
         case 4:
-            git_delete_shortcut()
+            GitBranchShortcut.git_delete_shortcut(git_path)
             git_path.get_current_branch(True)
         case 5:
             git_mikkel_merge()
         case 6:
-            git_create_branch("Checkout ")
+            GitBranchShortcut.git_create_branch("Checkout ", git_path)
             git_path.get_current_branch(True)
         case 7:
-            git_add_amend_push()
+            GitRemoteShortCut.git_add_amend_push(git_path, GitSaveVars)
         case 8:
-            git_set_upstream_origin_branch()
+            GitRemoteShortCut.git_set_upstream_origin_branch(git_path)
         case 9:
-            git_restore_files()
+            GitRestoreClean.git_restore_files(git_path)
         case 10:
-            git_clean()
+            GitRestoreClean.git_clean(git_path)
         case 11:
-            get_all_files_from_commit()
+            GetAllFilesFromCommit.get_all_files_from_commit(git_path)
         case -1:
             git_path.new_path()
             git_path.get_current_branch(True)
@@ -117,193 +123,9 @@ def run_commands(git_path, option):
             git_path.get_current_branch(True)
             return
         case -8:
-            set_rebase_branch()
+            GitRepoShortcuts.set_rebase_branch(GitSaveVars)
         case -9:
-            useful_functions_and_commands()
-
-def choose_branch(message) -> int:
-    count = 1
-    print(message)
-    print(Color.string(Color.BOLD, "(Press 0 to not do anything)"))
-    for branch in git_path.get_all_branches(False):
-        if count & 1 == 0:
-            print("\t" + str(count) + ") " + Color.string(Color.DARKCYAN, branch))
-        else:
-            print("\t" + str(count) + ") " + Color.string(Color.CYAN, branch))
-        count += 1
-
-    choice = int(input("Choice (int): "))
-    return choice
-
-def git_status_rebase():
-    # checking if there are local changes that need to be dealt with
-    git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\status.log\"")
-    status_file = open("status.log", "r")
-    cannot_rebase = True
-    for line in status_file.readlines():
-        line = line.strip()
-        if line.startswith("nothing to commit, working tree clean"):
-            cannot_rebase = False
-            break
-    
-    if cannot_rebase:
-        git_path.cmd_at_path("git status")
-        git_path.get_current_branch(force_update=True)
-        print(Color.string(Color.RED, "Cannot rebase ") + Color.string(Color.CYAN, git_path.curr_branch) + Color.string(Color.RED, " until changes committed!"))
-        return
-
-    if GitSaveVars.addPruneCountCheck():
-        print(Color.BLUE)
-        git_path.cmd_at_path("git prune")
-        print(Color.END)
-
-    # if local changes dealt with, perform a fetch then rebase
-    git_path.cmd_at_path("git remote update")
-    git_path.cmd_at_path("git rebase " + GitSaveVars.rebase_branch)
-
-def git_checkout_shortcut():
-    choice = choose_branch("Choose a branch below to checkout to")
-    if choice < 1 or choice > len(git_path.get_all_branches(False)):
-        return
-    
-    if git_path.get_all_branches(False)[choice-1].startswith("*"):
-        print(Color.string(Color.BOLD, "Cannot checkout the branch you are currently on!"))
-        return
-    
-    git_path.cmd_at_path("git checkout " + git_path.get_all_branches(False)[choice-1])
-
-def git_delete_shortcut():
-    choice = choose_branch("Choose a branch below to delete")
-    if choice < 1 or choice > len(git_path.get_all_branches(False)):
-        return
-    
-    if git_path.get_all_branches(False)[choice-1].startswith("*"):
-        print(Color.string(Color.BOLD, "Cannot delete the branch you are currently on!"))
-        return
-    
-    git_path.cmd_at_path("git branch -D " + git_path.get_all_branches(False)[choice-1])
-
-def retrieve_branches_from_remote():
-    git_path.new_branch("branch -r", False)
-    choice = -1
-    while choice < 0 or choice > 2:
-        choice = int(input("Choose an option:\n" +
-                   "1) Retrieve All Remote Branches\n" +
-                   "2) Retrieve A Specified # of branches\n" + 
-                   "0) Back to main menu"))
-
-    if choice == 1:
-        get_all_branches_remote()
-    elif choice == 2:
-        get_branches_remote()
-
-def get_branches_remote():
-    for key in git_path.chk_dict:
-        print(str(key) + ") " + git_path.chk_dict[key])
-    line = input("Enter #s separated by spaces: ")
-
-    choice = ""
-    for c in line:
-        if c == " ":
-            git_path.add_branch_to_local(int(choice))
-            choice = ""
-        elif c.isdigit():
-            choice += c
-    git_path.add_branch_to_local(int(choice))
-
-def get_all_branches_remote():
-    for key in git_path.chk_dict:
-        git_path.add_branch_to_local(key)
-
-def git_add_amend_push():
-    if GitSaveVars.addPruneCountCheck():
-        print(Color.BLUE)
-        git_path.cmd_at_path("git prune")
-        print(Color.END)
-
-    print(Color.YELLOW)
-    git_path.cmd_at_path("git status")
-    cont = -1
-    cont = int(input(
-        "Continue?\n" +
-        "  " + Color.string(Color.GREEN, "1) Yes\n") +
-        "  " + Color.string(Color.RED + Color.BOLD, "2) No\n") +
-        "Choice: " 
-    ))
-    
-    if cont != 1:
-        return
-    
-    print(Color.YELLOW)
-    git_path.cmd_at_path("git add .")
-    git_path.cmd_at_path("git commit --amend")
-    print(Color.END)
-
-    # ensuring that the local branch given exists in local repo
-    # avoiding annoyances if a git prune has not been done in a while
-    local_branch = ""
-    while not (local_branch in git_path.get_all_branches(False)):
-        local_branch = input(Color.string(Color.BOLD + Color.RED, "local branch: "))
-        if local_branch.startswith("*") or local_branch == git_path.get_current_branch(False):
-            local_branch = "* " + git_path.get_current_branch(False)
-    if local_branch.startswith("*"):
-        local_branch = git_path.get_current_branch(False)
-    
-    # remote branch should not be checked: may be a different name in remote
-    remote_branch = input(Color.string(Color.BOLD + Color.RED, "remote branch: "))
-    print(Color.YELLOW)
-    git_path.cmd_at_path("git push origin " + local_branch + ":" + remote_branch + " -f")
-    print(Color.END)
-
-def git_set_upstream_origin_branch():
-    choice = int(input(
-        Color.string(Color.YELLOW, "1) git commit\n") +
-        Color.string(Color.YELLOW, "2) git commit --amend\n") +
-        "0) Exit Mode\n" +
-        "Choice: "
-    ))
-
-    if choice == 0:
-        return
-
-    print(Color.YELLOW)
-    git_path.cmd_at_path("git add .")
-    match choice:
-        case 1:
-            git_path.cmd_at_path("git commit")
-        case 2:
-            git_path.cmd_at_path("git commit --amend")
-
-    git_path.cmd_at_path("git push --set-upstream origin " + git_path.get_current_branch(False))
-    print(Color.END)
-
-def git_clean():
-    # git clean
-    choice = int(input(
-        Color.string(Color.YELLOW, "1) clean -f -x") + " #(files)\n" +
-        Color.string(Color.YELLOW, "2) clean -f -d -x") + " #(directories)\n" +
-        "0) Exit Clean Mode\n" +
-        "Choice: "
-    ))
-
-    match choice:
-        case 1:
-            git_path.cmd_at_path("git clean -f -x")
-        case 2:
-            git_path.cmd_at_path("git clean -f -d -x")
-
-def get_all_files_from_commit():
-    commit_id = input(Color.string(Color.CYAN, "Commit ID: "))
-    folder_name = "commit_" + commit_id
-    os.system("mkdir " + folder_name)
-    c_drive_filename = "C:\\" + TEMP_COMMIT_TXT_NAME
-    git_path.cmd_at_path("git diff-tree -r --no-commit-id --name-only --diff-filter=ACMRT " + commit_id + " > " + c_drive_filename)
-    file = open(c_drive_filename, "r")
-    for filename in file.readlines():
-        filename = filename.strip()
-        full_filename = git_path.path + "\\" + filename
-        full_filename = full_filename.replace("/", "\\")
-        os.system("copy \"" + full_filename + "\" " + folder_name)
+            UsefulFunctions.useful_functions_and_commands(git_path)
 
 def git_mikkel_merge():
     # Grabbing current path and updating to ensure we are on the correct one
@@ -326,222 +148,6 @@ def git_mikkel_merge():
     git_path.cmd_at_path("git merge origin/" + current_path)
     git_path.cmd_at_path("git push")
 
-def git_create_branch(message):
-    backup_pr = input(message + "Branch: ")
-    git_path.cmd_at_path("git checkout -b " + backup_pr)
-
-def git_restore_files():
-    # printing the git status to a text file in this repo's directory (to not 
-    # create text files in that directory)
-    git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\\" + TEMP_STATUS_TXT_NAME + "\"")
-
-    status_file = open(TEMP_STATUS_TXT_NAME)
-    staged_files = []
-    unstaged_files = []
-    get_delta_files(file=status_file, staged_files=staged_files, unstaged_files=unstaged_files)
-
-    if len(staged_files) == 0 and len(unstaged_files) == 0:
-        git_path.cmd_at_path("git status")
-        return
-    
-    choose_file_to_restore(staged_files=staged_files, unstaged_files=unstaged_files)
-
-    status_file.close()
-
-def get_delta_files(file, staged_files, unstaged_files):
-    add_to_staged = False
-    add_to_unstaged = False
-    for line in file.readlines():
-        line = line.strip()
-        if line.startswith("Changes to be committed:"):
-            add_to_staged = True
-            add_to_unstaged = False
-        elif line.startswith("Changes not staged for commit:"):
-            add_to_staged = False
-            add_to_unstaged = True
-        elif line.startswith("no changes added to commit"):
-            add_to_unstaged = False
-            add_to_staged = False
-
-        if (not add_to_staged) and (not add_to_unstaged):
-            continue
-        
-        idx = line.find(":")
-        if idx == -1:
-            continue
-
-        line = line[(idx+1):len(line)]
-        line = line.strip()
-        if len(line) == 0:
-            continue
-
-        if add_to_staged:
-            staged_files.append(line)
-        elif add_to_unstaged:
-            unstaged_files.append(line)
-
-def choose_file_to_restore(staged_files, unstaged_files):
-    choice = 9999
-    while choice > 0:
-        print(Color.string(Color.GREEN, "Staged Files:"))
-        count = 0
-        unstaged_count_offset = len(staged_files)
-        for staged_file in staged_files:
-            count += 1
-            print("\t" + str(count) + ") " + staged_file)
-
-        print(Color.string(Color.RED, "Unstaged Files:"))
-        for unstaged_file in unstaged_files:
-            count += 1
-            print("\t" + str(count) + ") " + unstaged_file)
-
-        count += 1
-        print(Color.string(Color.YELLOW, "Options:"))
-        print("\t0) Back to Main Menu")
-        choice = int(input(Color.string(Color.BOLD, "Choice: ")))
-        if choice <= 0:
-            break
-        elif choice > (len(staged_files) + len(unstaged_files)):
-            continue
-
-        if len(staged_files) > 0 and choice <= len(staged_files):
-            git_path.cmd_at_path("git restore --staged " + staged_files[choice-1])
-            unstaged_files.append(staged_files.pop(choice-1))
-        elif len(unstaged_files) > 0 and choice > len(staged_files):
-            git_path.cmd_at_path("git restore " + unstaged_files[choice-unstaged_count_offset-1])
-            unstaged_files.pop(choice-1)
-
-def set_rebase_branch():
-    jsonDict = {}
-    file : TextIOWrapper = None
-
-    if not os.path.exists(REBASE_BRANCHES_TXT_NAME):
-        jsonDict = get_json_dict()
-    else:
-        try:
-            file = open(REBASE_BRANCHES_TXT_NAME, "r")
-            jsonDict = json.load(file)
-        except Exception:
-            jsonDict = get_json_dict()
-
-    rebase_branches = []
-    message = ""
-    curr_idx = 1
-    choice = 1
-    for branch in jsonDict[REBASE_BRANCHES_KEY_NAME]:
-        rebase_branches.append(branch)
-        if curr_idx % 2 == 0:
-            message += Color.string(Color.GREEN, str(curr_idx) + ")  " + branch + "\n")
-        else:
-            message += Color.string(Color.RED, str(curr_idx) + ")  " + branch + "\n")
-        curr_idx += 1
-    
-    while choice != 0:
-        choice = int(input(
-            message +
-            "0)  Exit Mode\n" +
-            "-1) Add Path\n" +
-            "-2) Remove Path\n" +
-            "Choice: "
-        ))
-
-        match choice:
-            case 0:
-                return
-            case -1:
-                message, curr_idx = add_rebase_branch(rebase_branches, jsonDict, message, curr_idx)
-            case -2:
-                message, curr_idx = remove_rebase_branch(rebase_branches, jsonDict, message, curr_idx)
-            case _:
-                branch = rebase_branches[choice-1]
-                GitSaveVars.set_rebase_branch(branch)
-                return
-
-def get_json_dict() -> dict:
-    file = open(REBASE_BRANCHES_TXT_NAME, "w")
-    jsonDict = {
-        REBASE_BRANCHES_KEY_NAME : {
-
-        }
-    }
-    json.dump(jsonDict, file)
-    file.close()
-
-    return jsonDict
-
-def add_rebase_branch(rebase_branches : list, jsonDict : dict, message : str, curr_idx : int):
-    file = open(REBASE_BRANCHES_TXT_NAME, "w")
-    branch = input("Branch: ")
-    GitSaveVars.set_rebase_branch(branch)
-    rebase_branches.append(branch)
-    jsonDict[REBASE_BRANCHES_KEY_NAME][branch] = True
-    message += str(curr_idx) + ")  " + branch + "\n"
-    curr_idx += 1
-    json.dump(jsonDict, file)
-    file.close()
-
-    return message, curr_idx
-
-def remove_rebase_branch(rebase_branches : list, jsonDict : dict, message : str, curr_idx : int):
-    del_choice = int(input(
-        message +
-        "0) Do not delete\n" +
-        "Choice: "
-    ))
-    del_choice_idx = del_choice-1
-
-    # we chose to exit instead of deleting
-    if del_choice <= 0 or del_choice_idx >= len(rebase_branches):
-        return message, curr_idx
-    
-    file = open(REBASE_BRANCHES_TXT_NAME, "w")
-
-    # removing element from list and jsonDict
-    jsonDict[REBASE_BRANCHES_KEY_NAME].pop(rebase_branches[del_choice_idx])
-    rebase_branches.pop(del_choice_idx)
-
-    # changing string for the next print
-    curr_idx = 1
-    message = ""
-    for branch in rebase_branches:
-        message += str(curr_idx) + ")  " + branch + "\n"
-        curr_idx += 1
-
-    # output all of the results to the file
-    json.dump(jsonDict, file)
-
-    file.close()
-
-    return message, curr_idx
-def useful_functions_and_commands():
-    choice = 1
-    while choice != 0:
-        choice = int(input(
-            "1) Replace String with another String\n" +
-            "0) Exit Mode\n" +
-            "Choice: "
-        ))
-
-        useful_func_command_pick(choice)
-
-def useful_func_command_pick(choice : int):
-    match choice:
-        case 1:
-            replace_string_with_string()
-        case 2:
-            generate_github_from_gerrit_code()
-        case 3:
-            turn_off_trainings_stub_mrc()
-
-def replace_string_with_string():
-    old_char = input("Old String: ")
-    new_char = input("New String: ")
-
-    full_string = input("String: ")
-    full_string = full_string.replace(old_char, new_char)
-    print(full_string)
-
-
 if __name__ == '__main__':
     GitSaveVars.initialize()
     git_path = GitPath()
@@ -553,10 +159,12 @@ if __name__ == '__main__':
     git_path.get_current_branch(True)
 
     # calling main function as long as user does not exit prog (user enters 0)
-    ret_arr = main(git_path)
-    retVal = ret_arr["option"]
-    git_path = ret_arr["git_path"]
+    ret_dict: dict = main(git_path)
+
+    retVal: int       = ret_dict["option"]
+    git_path: GitPath = ret_dict["git_path"]
     while retVal != 0:
-        ret_arr = main(git_path)
-        retVal = ret_arr["option"]
-        git_path = ret_arr["git_path"]
+        ret_dict = main(git_path)
+
+        retVal   = ret_dict["option"]
+        git_path = ret_dict["git_path"]
