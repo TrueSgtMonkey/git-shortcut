@@ -1,6 +1,7 @@
 from git_path import GitPath
 from git_save import GitSaveVars
 from style import Color
+from git_util_functions import GitUtilFunctions
 
 class GitRemoteShortCut:
     @classmethod
@@ -12,14 +13,8 @@ class GitRemoteShortCut:
 
         print(Color.YELLOW)
         git_path.cmd_at_path("git status")
-        cont = -1
-        cont = int(input(
-            "Continue?\n" +
-            "  " + Color.string(Color.GREEN, "1) Yes\n") +
-            "  " + Color.string(Color.RED + Color.BOLD, "2) No\n") +
-            "Choice: " 
-        ))
-        
+
+        cont: int = GitUtilFunctions.get_continue_choice()
         if cont != 1:
             return
         

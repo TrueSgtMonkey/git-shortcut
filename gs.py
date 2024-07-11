@@ -6,11 +6,11 @@ import json as json
 import os as os
 
 sys.path[:0] = ["options", "misc_options"]
-from options.git_status_rebase         import GitStatusRebase
-from options.git_branch_shortcut       import GitBranchShortcut
-from options.git_remote_shortcut       import GitRemoteShortCut
-from options.git_restore_clean         import GitRestoreClean
-from options.get_all_files_from_commit import GetAllFilesFromCommit
+from options.git_status_rebase       import GitStatusRebase
+from options.git_branch_shortcut     import GitBranchShortcut
+from options.git_remote_shortcut     import GitRemoteShortCut
+from options.git_restore_clean       import GitRestoreClean
+from options.get_current_commit_info import GetCurrentCommitInfo
 
 from misc_options.git_repo_shortcuts            import GitRepoShortcuts
 from misc_options.useful_functions_and_commands import UsefulFunctions
@@ -23,9 +23,6 @@ MIN_OPTIONS = -9
 MAX_OPTIONS = 11
 
 def main(git_path) -> dict:
-    # keeping this because it is useful to know which OS version is running
-    print(Color.string(Color.BOLD + Color.GREEN + Color.UNDERLINE, "Version: " + git_path.plat))
-
     # setting to very low value to make sure it runs at least once
     option = -999999
     while (option < MIN_OPTIONS) or (option > MAX_OPTIONS):
@@ -40,7 +37,6 @@ def main(git_path) -> dict:
     }
 
 def print_user_options(git_path):
-    print(Color.string(Color.BOLD + Color.RED, "WARNING: Make sure to put this outside of your git project!"))
     user_input = ""
     print(
         Color.string(Color.BOLD + Color.GREEN, "#)  Option\n") +
@@ -49,7 +45,7 @@ def print_user_options(git_path):
         "2)   git rebase with " + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + "\n" +
         "3)   git checkout <list_of_branches>\n" +
         "4)   git branch -D <list_of_branches>\n" +
-        "5)   MIKKEL MERGE\n" + 
+        "5)   update current branch\n" + 
         "6)   git checkout -b <branch_name>\n" +
         "7)   amend PR code review\n" +
         "8)   git push --set-upstream origin " + Color.string(Color.CYAN, git_path.get_current_branch(False)) + "\n" +
@@ -85,15 +81,12 @@ def run_commands(git_path, option):
             GitStatusRebase.git_status_rebase(git_path, GitSaveVars)
         case 3:
             GitBranchShortcut.git_checkout_shortcut(git_path)
-            git_path.get_current_branch(True)
         case 4:
             GitBranchShortcut.git_delete_shortcut(git_path)
-            git_path.get_current_branch(True)
         case 5:
-            git_mikkel_merge()
+            GitBranchShortcut.git_update_current_branch(git_path)
         case 6:
             GitBranchShortcut.git_create_branch("Checkout ", git_path)
-            git_path.get_current_branch(True)
         case 7:
             GitRemoteShortCut.git_add_amend_push(git_path, GitSaveVars)
         case 8:
@@ -103,7 +96,7 @@ def run_commands(git_path, option):
         case 10:
             GitRestoreClean.git_clean(git_path)
         case 11:
-            GetAllFilesFromCommit.get_all_files_from_commit(git_path)
+            GetCurrentCommitInfo.get_all_files_from_commit(git_path)
         case -1:
             git_path.new_path()
             git_path.get_current_branch(True)
@@ -159,6 +152,8 @@ if __name__ == '__main__':
     git_path.get_current_branch(True)
 
     # calling main function as long as user does not exit prog (user enters 0)
+    print(Color.string(Color.BOLD + Color.GREEN + Color.UNDERLINE, "Version: " + git_path.plat))
+    print(Color.string(Color.BOLD + Color.RED, "WARNING: Make sure to put this outside of your git project!"))
     ret_dict: dict = main(git_path)
 
     retVal: int       = ret_dict["option"]

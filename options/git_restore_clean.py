@@ -1,84 +1,13 @@
-from io import TextIOWrapper
 from git_path import GitPath
 from style import Color
-
-TEMP_STATUS_TXT_NAME = "..temp_status.txt"
+from get_current_commit_info import GetCurrentCommitInfo
 
 class GitRestoreClean:
     @classmethod
     def git_restore_files(self, git_path: GitPath):
-        # printing the git status to a text file in this repo's directory (to not 
-        # create text files in that directory)
-        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\\" + TEMP_STATUS_TXT_NAME + "\"")
-
-        status_file = open(TEMP_STATUS_TXT_NAME)
-        staged_files = []
-        unstaged_files = []
-        untracked_files = []
-        self.get_delta_files(file=status_file, staged_files=staged_files, unstaged_files=unstaged_files, untracked_files=untracked_files)
-
-        if len(staged_files) == 0 and len(unstaged_files) == 0 and len(untracked_files) == 0:
-            git_path.cmd_at_path("git status")
-            return
+        # retrieving the types of changes below from a git_status call
+        staged_files, unstaged_files, untracked_files = GetCurrentCommitInfo.get_current_changes_as_arrays(git_path)
         
-        self.choose_file_to_restore(git_path, staged_files=staged_files, unstaged_files=unstaged_files, untracked_files=untracked_files)
-
-        status_file.close()
-
-    @classmethod
-    def get_delta_files(self, file: TextIOWrapper, staged_files: list, unstaged_files: list, untracked_files: list):
-        add_to_staged =    False
-        add_to_unstaged =  False
-        add_to_untracked = False
-        for line in file.readlines():
-            line: str = line.strip()
-            if line.startswith("Changes not staged for commit:"):
-                add_to_unstaged  = True
-                add_to_staged    = False
-                add_to_untracked = False
-            elif line.startswith("Changes to be committed:"):
-                add_to_unstaged  = False
-                add_to_staged    = True
-                add_to_untracked = False
-            elif line.startswith("Untracked files"):
-                add_to_unstaged  = False
-                add_to_staged    = False
-                add_to_untracked = True
-            elif line.startswith("no changes added to commit"):
-                add_to_unstaged  = False
-                add_to_staged    = False
-                add_to_untracked = False
-                
-
-            if (not add_to_staged) and (not add_to_unstaged) and (not add_to_untracked):
-                continue
-            
-            idx = line.find(":")
-            if idx == -1 and (not add_to_untracked):
-                continue
-            
-            if line.find("git add <file>...") != -1:
-                continue
-            
-            if add_to_untracked and line.find("nothing added to commit but untracked files present") != -1:
-                continue
-
-            # For untracked files, idx == -1
-            # But, that will be fine since we will just grab the entire string
-            line = line[(idx+1):len(line)]
-            line = line.strip()
-            if len(line) == 0:
-                continue
-
-            if add_to_staged:
-                staged_files.append(line)
-            elif add_to_unstaged:
-                unstaged_files.append(line)
-            elif add_to_untracked:
-                untracked_files.append(line)
-
-    @classmethod
-    def choose_file_to_restore(self, git_path: GitPath, staged_files: list, unstaged_files: list, untracked_files: list):
         choice = 9999
         while choice > 0:
             print(Color.string(Color.GREEN, "Staged Files:"))
