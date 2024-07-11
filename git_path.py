@@ -122,7 +122,7 @@ class GitPath:
         return str_to_ret
 
     @classmethod
-    def get_all_branches(Self, force_update) -> array:
+    def get_all_branches(Self, force_update) -> list:
         if force_update or len(Self.all_branches) == 0:
             old_text = Self.txt_file
             Self.all_branches = []
