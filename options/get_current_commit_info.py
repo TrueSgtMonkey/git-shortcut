@@ -2,9 +2,10 @@ from git_path import GitPath
 from style import Color
 import os as os
 from io import TextIOWrapper
+from git_util_functions import GitUtilFunctions
 
 TEMP_COMMIT_TXT_NAME = "___commit___.txt"
-TEMP_STATUS_TXT_NAME = "..temp_status.txt"
+TEMP_STATUS_TXT_NAME = "__temp_status.txt"
 
 class GetCurrentCommitInfo:
     @classmethod
@@ -12,20 +13,26 @@ class GetCurrentCommitInfo:
         commit_id = input(Color.string(Color.CYAN, "Commit ID: "))
         folder_name = "commit_" + commit_id
         os.system("mkdir " + folder_name)
-        c_drive_filename = "C:\\" + TEMP_COMMIT_TXT_NAME
-        git_path.cmd_at_path("git diff-tree -r --no-commit-id --name-only --diff-filter=ACMRT " + commit_id + " > " + c_drive_filename)
-        file = open(c_drive_filename, "r")
+        
+        platform_slash: str = "\\" if git_path.plat == "Windows" else "/"
+        platform_filename: str = git_path.curr_dir + platform_slash + TEMP_COMMIT_TXT_NAME
+
+        git_path.cmd_at_path("git diff-tree -r --no-commit-id --name-only --diff-filter=ACMRT " + commit_id + " > " + platform_filename)
+        file = open(platform_filename, "r")
         for filename in file.readlines():
             filename = filename.strip()
-            full_filename = git_path.path + "\\" + filename
-            full_filename = full_filename.replace("/", "\\")
+            full_filename = git_path.path + platform_slash + filename
+            if git_path.plat == "Windows":
+                full_filename = full_filename.replace("/", "\\")
             os.system("copy \"" + full_filename + "\" " + folder_name)
             
     @classmethod
     def get_current_changes_as_arrays(self, git_path: GitPath) -> tuple[list, list, list]:
         # printing the git status to a text file in this repo's directory (to not 
         # create text files in that directory)
-        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + "\\" + TEMP_STATUS_TXT_NAME + "\"")
+        platform_slash: str = "\\" if git_path.plat == "Windows" else "/"
+        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + platform_slash + TEMP_STATUS_TXT_NAME + "\"")
+        GitUtilFunctions.was_file_created_correctly(git_path, TEMP_STATUS_TXT_NAME)
 
         status_file = open(TEMP_STATUS_TXT_NAME)
         staged_files = []
