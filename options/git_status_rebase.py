@@ -10,7 +10,10 @@ class GitStatusRebase:
     @classmethod
     def git_status_rebase(self, git_path: GitPath, git_save_vars: GitSaveVars):
         # checking if there are local changes that need to be dealt with
-        git_path.cmd_at_path("git status > \"" + git_path.curr_dir + f"\{STATUS_FILE_NAME}\"")
+        slash_text: str = "\\" if git_path.plat == "Windows" else "/"
+        status_text: str = "git status > \"" + git_path.curr_dir + slash_text + f"{STATUS_FILE_NAME}\""
+        print(status_text)
+        git_path.cmd_at_path(status_text)
         if not GitUtilFunctions.was_file_created_correctly(git_path, STATUS_FILE_NAME):
             return
 
