@@ -107,9 +107,9 @@ def run_commands(git_path, option):
             git_path.remove_path(git_path.SAVE_PATH)
             git_path.get_current_branch(True)
         case -4:
-            git_path.cmd_at_path("start cmd.exe" if git_path.plat == "Windows" else "open -a Terminal .")
+            GitRepoShortcuts.open_terminal_for_os(git_path, GitRepoShortcuts.CMD_ID)
         case -5:
-            git_path.cmd_at_path("start git-bash.exe" if git_path.plat == "Windows" else "open -a Terminal .")
+            GitRepoShortcuts.open_terminal_for_os(git_path, GitRepoShortcuts.BASH_ID)
         case -6:
             git_path.explore_at_path()
         case -7:

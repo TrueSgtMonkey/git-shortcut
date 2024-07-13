@@ -3,6 +3,7 @@
 from io import TextIOWrapper
 import json as json
 import os as os
+from git_path import GitPath
 from git_save import GitSaveVars
 from style import Color
 
@@ -11,6 +12,25 @@ REBASE_BRANCHES_TXT_NAME  = "rebase_branches.json"
 REBASE_BRANCHES_KEY_NAME  = "rebase_branches"
 
 class GitRepoShortcuts:
+    CMD_ID: int = 4
+    BASH_ID: int = 5
+
+    @classmethod
+    def open_terminal_for_os(self, git_path: GitPath, type_cmd_id: int):
+        match git_path.plat.lower():
+            case "windows":
+                if type_cmd_id == self.CMD_ID:
+                    git_path.cmd_at_path("start cmd.exe")
+                elif type_cmd_id == self.BASH_ID:
+                    git_path.cmd_at_path("start git-bash.exe")
+                else:
+                    print("Unknown ID: Check \'open_terminal_for_os\' function!")
+                    return
+            case "linux":
+                git_path.cmd_at_path(f"konsole {git_path.path}")
+            case _:
+                git_path.cmd_at_path("open -a Terminal .")
+
     @classmethod
     def set_rebase_branch(self, git_save_vars: GitSaveVars):
         jsonDict = {}

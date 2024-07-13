@@ -172,12 +172,15 @@ class GitPath:
 
     @classmethod
     def explore_at_path(Self):
-        if Self.plat == "Windows":
-            path = os.path.realpath(Self.path)
-            os.startfile(path)
-        else: 
-            os.system("open %s" % Self.path)
-
+        match Self.plat.lower():
+            case "windows":
+                path = os.path.realpath(Self.path)
+                os.startfile(path)
+            case "linux":
+                os.system("dolphin %s" % Self.path)
+            case _:
+                os.system("open %s" % Self.path)
+            
     @classmethod
     def set_curr_dir(Self, path):
         if type(path) is str:
