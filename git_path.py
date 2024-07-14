@@ -177,9 +177,9 @@ class GitPath:
                 path = os.path.realpath(Self.path)
                 os.startfile(path)
             case "linux":
-                os.system("dolphin %s" % Self.path)
+                os.system(f"dolphin {Self.path} &")
             case _:
-                os.system("open %s" % Self.path)
+                os.system(f"open {Self.path}")
             
     @classmethod
     def set_curr_dir(Self, path):
