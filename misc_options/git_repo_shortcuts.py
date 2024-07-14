@@ -27,7 +27,7 @@ class GitRepoShortcuts:
                     print("Unknown ID: Check \'open_terminal_for_os\' function!")
                     return
             case "linux":
-                git_path.cmd_at_path(f"konsole {git_path.path}")
+                git_path.cmd_at_path(f"konsole {git_path.path} &")
             case _:
                 git_path.cmd_at_path("open -a Terminal .")
 
