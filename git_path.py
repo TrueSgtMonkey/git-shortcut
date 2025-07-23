@@ -220,12 +220,12 @@ class GitPath:
             os.system(app_cmd + Self.txt_file)
 
     @classmethod
-    def cmd_at_path(Self, app, customPath = ""):
-        if customPath == "":
+    def cmd_at_path(Self, system_cmd: str, custom_path = ""):
+        if custom_path == "":
             os.chdir(Self.path)
         else:
-            os.chdir(customPath)
-        os.system(app)
+            os.chdir(custom_path)
+        os.system(system_cmd)
         os.chdir(Self.curr_dir)
 
     @classmethod

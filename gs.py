@@ -37,11 +37,12 @@ def main(git_path) -> dict:
     }
 
 def print_user_options(git_path):
+    print(Color.string(Color.BOLD + Color.RED, "WARNING: Make sure to put this outside of your git project!"))
     user_input = ""
     print(
         Color.string(Color.BOLD + Color.GREEN, "#)  Option\n") +
         Color.string(Color.BOLD + Color.GREEN, "GIT SHORTCUTS:\n") + 
-        "1)   git branch > <file>\n" +
+        "1)   git status\n" +
         "2)   git rebase with " + Color.string(Color.YELLOW, GitSaveVars.rebase_branch) + "\n" +
         "3)   git checkout <list_of_branches>\n" +
         "4)   git branch -D <list_of_branches>\n" +
@@ -76,7 +77,7 @@ def print_user_options(git_path):
 def run_commands(git_path, option):
     match option:
         case 1:
-            git_path.cmd_to_txt("branch", True)
+            git_path.cmd_at_path("git status")
         case 2:
             GitStatusRebase.git_status_rebase(git_path, GitSaveVars)
         case 3:
@@ -92,7 +93,7 @@ def run_commands(git_path, option):
         case 8:
             GitRemoteShortCut.git_set_upstream_origin_branch(git_path)
         case 9:
-            GitRestoreClean.git_restore_files(git_path)
+            GitRestoreClean.git_restore_files(git_path, 69)
         case 10:
             GitRestoreClean.git_clean(git_path)
         case 11:
