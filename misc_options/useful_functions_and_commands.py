@@ -7,8 +7,11 @@ from git_path import GitPath
 from style import Color
 
 TRAININGS_DICT_NAME = "trainings.json"
+CODIUM_TEST_STR: str = "___codium___.txt"
 
 class UsefulFunctions:
+    current_code_app: str = "code"
+
     @classmethod
     def useful_functions_and_commands(self, git_path: GitPath):
         choice = 1
@@ -44,7 +47,27 @@ class UsefulFunctions:
         
     @classmethod
     def open_vscode_in_repo(self, git_path: GitPath):
-        git_path.cmd_at_path("code .")
+        #TODO: support Linux?
+        codium_path: str = f"{git_path.curr_dir}\\{CODIUM_TEST_STR}"
+        git_path.cmd_at_path(f"{self.current_code_app} . > {codium_path} 2>&1")
+        if not os.path.isfile(f"{codium_path}"):
+            return
+
+        codium_file = open(codium_path, "r")
+        is_code_found: bool = True
+        for line in codium_file.readlines():
+            if line.find("is not recognized as an internal or external command") != -1:
+                is_code_found = False
+                break
+
+        if not is_code_found:
+            if self.current_code_app == "code":
+                self.current_code_app = "codium"
+            elif self.current_code_app == "codium":
+                self.current_code_app = "code"
+
+            git_path.cmd_at_path(f"{self.current_code_app} .")
+
 
     @classmethod
     def remove_string_from_file_output_to_new(self, git_path: GitPath):
